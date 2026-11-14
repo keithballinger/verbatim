@@ -2,7 +2,7 @@ import Foundation
 import Carbon
 
 enum AppleNoteContent {
-    case text(String)
+    case text(String, modified: Date?)
     case locked
 }
 
@@ -23,8 +23,8 @@ final class AppleNotesSource: AppleNotesReading {
     on readNote(noteID)
         tell application id "com.apple.Notes"
             set sourceNote to note id noteID
-            if password protected of sourceNote then return {true, ""}
-            return {false, plaintext of sourceNote}
+            if password protected of sourceNote then return {true, "", missing value}
+            return {false, plaintext of sourceNote, modification date of sourceNote}
         end tell
     end readNote
     """
@@ -50,12 +50,13 @@ final class AppleNotesSource: AppleNotesReading {
 
     func read(identifier: String) throws -> AppleNoteContent {
         let result = try call("readnote", arguments: [identifier])
-        guard result.numberOfItems == 2, let protected = result.atIndex(1), let content = result.atIndex(2) else {
+        guard result.numberOfItems == 3, let protected = result.atIndex(1), let content = result.atIndex(2) else {
             throw ImportError.script("Notes returned unexpected note content.")
         }
         if protected.booleanValue { return .locked }
         guard let text = content.stringValue else { throw ImportError.script("Notes did not return plain text.") }
-        return .text(text)
+        // A note without a readable date is still imported; it is stamped with the import time.
+        return .text(text, modified: result.atIndex(3)?.dateValue)
     }
 
     private func call(_ handler: String, arguments: [String]) throws -> NSAppleEventDescriptor {

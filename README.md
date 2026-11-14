@@ -17,6 +17,7 @@ Requires Xcode 16 or later with the macOS SDK and command-line tools selected
 make build   # universal release app: .build/Build/Products/Release/Verbatim.app
 make run
 make test
+make install # copy the app to /Applications (override with APPDIR=...)
 ```
 
 The checked-in Xcode project builds without a project generator. `project.yml` is
@@ -33,6 +34,8 @@ location is `~/Documents/Verbatim` (create it with **New Folder** if necessary).
 Verbatim remembers access with a security-scoped bookmark. Use **File → Choose
 Notes Folder…** to change it.
 
+- The note list is always ordered by last modified, newest first, and each row
+  shows when its note last changed. Editing a note moves it to the top.
 - **Cmd+L:** search titles and bodies; use Up/Down to select a result.
 - **Return in search:** open the selected result, or create a note from the query
   when there are no matches. If body search is still running, Return waits for
@@ -55,7 +58,8 @@ replacements still supply text chosen by you or the input method.
 Only immediate, non-hidden, regular `.txt` files in the chosen folder are notes;
 subfolders and symlinks are ignored. Files must be valid UTF-8. Unsupported files
 are left untouched. The first line is the title, with **Untitled** as the display
-fallback for an empty or whitespace-only first line. Existing text is never
+fallback for an empty or whitespace-only first line, or one holding only
+attachment placeholders. Existing text is never
 trimmed, normalized, or rewritten merely by opening it.
 UTF-8 byte-order marks and existing line endings are preserved; a leading
 byte-order mark is excluded from the displayed title and derived filename.
@@ -139,8 +143,10 @@ CLI has the Apple Events entitlement and privacy usage description. Running
 The importer asks Apple Notes for its native `plaintext` property, one note at a
 time. It never modifies or deletes the originals. All notes exposed by Notes'
 scripting interface are flattened into the destination; password-protected notes
-are skipped. Formatting, attachments, folder/account hierarchy, and dates are not
-exported. Any attachment placeholders supplied by Notes remain ordinary text.
+are skipped. Each imported file is stamped with its note's modification date, so
+the list keeps the order you had in Notes. Formatting, attachments, folder/account
+hierarchy, and creation dates are not exported. Any attachment placeholders
+supplied by Notes remain ordinary text.
 Notes must be locally available to Notes; the tool does not fetch cloud data itself.
 
 Existing destination files are never overwritten. Identical UTF-8 bytes found

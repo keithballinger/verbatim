@@ -33,13 +33,17 @@ enum AtomicFile {
     }
 
     /// Publish a fully written new file without ever replacing another file.
-    static func create(_ text: String, at url: URL) throws {
+    /// A `modified` date is applied to the staged file, so the note never appears with a newer one.
+    static func create(_ text: String, at url: URL, modified: Date? = nil) throws {
         let temporary = url.deletingLastPathComponent().appendingPathComponent(".verbatim-\(UUID().uuidString).tmp")
         defer { try? FileManager.default.removeItem(at: temporary) }
         try Data(text.utf8).write(to: temporary, options: .withoutOverwriting)
         let handle = try FileHandle(forWritingTo: temporary)
         try handle.synchronize()
         try handle.close()
+        if let modified {
+            try FileManager.default.setAttributes([.modificationDate: modified], ofItemAtPath: temporary.path)
+        }
         let result = temporary.withUnsafeFileSystemRepresentation { source in
             url.withUnsafeFileSystemRepresentation { destination in renamex_np(source!, destination!, UInt32(RENAME_EXCL)) }
         }

@@ -18,10 +18,13 @@ enum NoteCatalog {
             guard v.isRegularFile == true, v.isSymbolicLink != true else { return nil }
             return NoteRecord(url: url, title: url.deletingPathExtension().lastPathComponent,
                               modified: v.contentModificationDate ?? .distantPast, size: v.fileSize ?? 0)
-        }.sorted {
-            if $0.modified != $1.modified { return $0.modified > $1.modified }
-            return $0.url.lastPathComponent < $1.url.lastPathComponent
-        }
+        }.sorted(by: newestFirst)
+    }
+
+    /// The one list order: most recently modified first, filename breaking ties so it is stable.
+    static func newestFirst(_ a: NoteRecord, _ b: NoteRecord) -> Bool {
+        if a.modified != b.modified { return a.modified > b.modified }
+        return a.url.lastPathComponent < b.url.lastPathComponent
     }
 
     static func title(_ url: URL) throws -> String {

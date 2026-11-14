@@ -8,6 +8,11 @@ final class NamingAndSearchTests: XCTestCase {
         XCTAssertEqual(NoteNaming.title(from: ""), "Untitled")
         XCTAssertEqual(NoteNaming.title(from: "A\u{2028}B"), "A")
     }
+    func testAttachmentPlaceholderOnlyFirstLineIsUntitled() {
+        XCTAssertEqual(NoteNaming.title(from: "\u{fffc}\nbody"), "Untitled")
+        XCTAssertEqual(NoteNaming.title(from: " \u{fffc} \u{fffc}"), "Untitled")
+        XCTAssertEqual(NoteNaming.title(from: "Photo \u{fffc}"), "Photo \u{fffc}")
+    }
     func testSanitizationAndUTF8ByteLimit() {
         XCTAssertEqual(NoteNaming.stem(for: " ../a:b\\c?  "), "-a-b-c-")
         XCTAssertEqual(NoteNaming.stem(for: "..."), "Untitled")

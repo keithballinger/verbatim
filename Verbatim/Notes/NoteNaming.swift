@@ -4,7 +4,9 @@ enum NoteNaming {
     static func title(from text: String) -> String {
         let content = text.hasPrefix("\u{feff}") ? text.dropFirst() : text[...]
         let line = String(content.prefix(while: { !$0.isNewline }))
-        return line.trimmingCharacters(in: .whitespaces).isEmpty ? "Untitled" : line
+        // U+FFFC is the placeholder Apple Notes leaves where an attachment was; alone it renders as nothing.
+        let blank = CharacterSet.whitespaces.union(CharacterSet(charactersIn: "\u{fffc}"))
+        return line.trimmingCharacters(in: blank).isEmpty ? "Untitled" : line
     }
 
     static func stem(for title: String) -> String {

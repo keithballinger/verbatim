@@ -1,10 +1,12 @@
 import AppKit
 
-final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate, NSSearchFieldDelegate, NSTextViewDelegate, NSMenuItemValidation {
+final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate, NSSearchFieldDelegate, NSTextViewDelegate, NSMenuItemValidation, NSToolbarDelegate {
     let editor = VerbatimTextView()
-    private let search = NSSearchField()
-    private let table = NSTableView()
-    private let status = NSTextField(labelWithString: "Choose a notes folder to begin.")
+    let search = NSSearchField()
+    let table = NSTableView()
+    let status = NSTextField(wrappingLabelWithString: "Choose a notes folder to begin.")
+    private let splitController = NSSplitViewController()
+    private static let newNoteItem = NSToolbarItem.Identifier("newNote")
     private let access: FolderAccess
     private let defaults: UserDefaults
     private let worker = SearchWorker()
@@ -43,29 +45,37 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         self.defaults = defaults
         access = FolderAccess(defaults: defaults)
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700),
-                              styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+                              styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+                              backing: .buffered, defer: false)
         super.init(window: window)
         window.title = "Verbatim"
         window.minSize = NSSize(width: 620, height: 380)
         window.isReleasedWhenClosed = false
         window.delegate = self
-        window.setFrameAutosaveName("VerbatimMainWindow")
         buildUI()
+        // Installing the content controller shrinks the window to fit; restore the default size first.
+        window.setContentSize(NSSize(width: 1000, height: 700))
+        window.layoutIfNeeded()
+        splitController.splitView.setPosition(280, ofDividerAt: 0)
+        splitController.splitView.autosaveName = "VerbatimSidebar"
+        window.setFrameAutosaveName("VerbatimMainWindow")
         window.center()
     }
     required init?(coder: NSCoder) { fatalError("Use init()") }
 
     private func buildUI() {
-        let root = NSView()
-        window?.contentView = root
         search.placeholderString = "Search notes or type a title…"
+        search.controlSize = .large
         search.delegate = self
         search.sendsSearchStringImmediately = true
         search.sendsWholeSearchString = false
         search.setAccessibilityLabel("Search notes or create a note")
-        table.addTableColumn(NSTableColumn(identifier: NSUserInterfaceItemIdentifier("title")))
+        let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("title"))
+        column.resizingMask = .autoresizingMask
+        table.addTableColumn(column)
+        table.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
         table.headerView = nil
-        table.rowHeight = 30
+        table.rowHeight = NoteCellView.rowHeight
         table.style = .sourceList
         table.delegate = self
         table.dataSource = self
@@ -73,44 +83,87 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         table.setAccessibilityLabel("Notes")
         let listScroll = NSScrollView()
         listScroll.hasVerticalScroller = true
+        listScroll.autohidesScrollers = true
+        listScroll.drawsBackground = false
         listScroll.documentView = table
+        status.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        status.textColor = .secondaryLabelColor
+        status.isSelectable = false
+        // Notices wrap in the narrow sidebar instead of being cut to one line; the tooltip has the rest.
+        status.maximumNumberOfLines = 4
+        status.cell?.truncatesLastVisibleLine = true
+        status.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        // The list is a full-height sidebar: search on top, notes below, the count at its foot.
+        let sidebar = NSView()
+        for view in [search, listScroll, status] {
+            view.translatesAutoresizingMaskIntoConstraints = false
+            sidebar.addSubview(view)
+        }
+        let safe = sidebar.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            search.topAnchor.constraint(equalTo: safe.topAnchor, constant: 4),
+            search.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 12),
+            search.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -12),
+            listScroll.topAnchor.constraint(equalTo: search.bottomAnchor, constant: 10),
+            listScroll.leadingAnchor.constraint(equalTo: sidebar.leadingAnchor),
+            listScroll.trailingAnchor.constraint(equalTo: sidebar.trailingAnchor),
+            listScroll.bottomAnchor.constraint(equalTo: status.topAnchor, constant: -8),
+            status.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
+            status.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16),
+            status.bottomAnchor.constraint(equalTo: safe.bottomAnchor, constant: -10)
+        ])
+
         let editorScroll = NSScrollView()
         editorScroll.hasVerticalScroller = true
         editorScroll.autohidesScrollers = true
         editorScroll.documentView = editor
         editor.delegate = self
         editor.font = EditorPreferences.font(defaults: defaults)
+        editor.textContainerInset = NSSize(width: 28, height: 18)
         editor.isContinuousSpellCheckingEnabled = defaults.bool(forKey: "spellChecking")
         editor.isGrammarCheckingEnabled = defaults.bool(forKey: "grammarChecking")
         editor.isEditable = false
         editor.setAccessibilityLabel("Note text")
-        let split = NSSplitView()
-        split.isVertical = true
-        split.dividerStyle = .thin
-        split.addArrangedSubview(listScroll)
-        split.addArrangedSubview(editorScroll)
-        status.font = .systemFont(ofSize: 11)
-        status.textColor = .secondaryLabelColor
-        status.lineBreakMode = .byTruncatingMiddle
-        for view in [search, split, status] {
-            view.translatesAutoresizingMaskIntoConstraints = false
-            root.addSubview(view)
-        }
-        NSLayoutConstraint.activate([
-            search.topAnchor.constraint(equalTo: root.topAnchor, constant: 12),
-            search.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 12),
-            search.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -12),
-            split.topAnchor.constraint(equalTo: search.bottomAnchor, constant: 12),
-            split.leadingAnchor.constraint(equalTo: root.leadingAnchor),
-            split.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            split.bottomAnchor.constraint(equalTo: status.topAnchor, constant: -6),
-            status.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 12),
-            status.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -12),
-            status.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -8),
-            listScroll.widthAnchor.constraint(greaterThanOrEqualToConstant: 180),
-            editorScroll.widthAnchor.constraint(greaterThanOrEqualToConstant: 300)
-        ])
-        split.setPosition(280, ofDividerAt: 0)
+
+        let sidebarController = NSViewController()
+        sidebarController.view = sidebar
+        let editorController = NSViewController()
+        editorController.view = editorScroll
+        let sidebarItem = NSSplitViewItem(sidebarWithViewController: sidebarController)
+        sidebarItem.canCollapse = false
+        sidebarItem.minimumThickness = 220
+        sidebarItem.maximumThickness = 440
+        let editorItem = NSSplitViewItem(viewController: editorController)
+        editorItem.minimumThickness = 320
+        splitController.addSplitViewItem(sidebarItem)
+        splitController.addSplitViewItem(editorItem)
+        window?.contentViewController = splitController
+
+        let toolbar = NSToolbar(identifier: "VerbatimMain")
+        toolbar.delegate = self
+        toolbar.displayMode = .iconOnly
+        window?.toolbar = toolbar
+        window?.toolbarStyle = .unified
+    }
+
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        [.sidebarTrackingSeparator, .flexibleSpace, Self.newNoteItem]
+    }
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        toolbarDefaultItemIdentifiers(toolbar)
+    }
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier,
+                 willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        guard itemIdentifier == Self.newNoteItem else { return nil }
+        let item = NSToolbarItem(itemIdentifier: itemIdentifier)
+        item.label = "New Note"
+        item.toolTip = "New Note (⌘N)"
+        item.image = NSImage(systemSymbolName: "square.and.pencil", accessibilityDescription: "New Note")
+        item.isBordered = true
+        item.target = self
+        item.action = #selector(newNote(_:))
+        return item
     }
 
     func start() {
@@ -243,17 +296,21 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
             table.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
         } else { table.deselectAll(nil) }
         suppressSelection = false
-        if !searching { status.stringValue = notice ?? "\(records.count) of \(notes.count) notes" }
+        if !searching { status.stringValue = notice ?? countText(shown: records.count) }
+    }
+
+    private func countText(shown: Int) -> String {
+        let total = notes.count == 1 ? "1 note" : "\(notes.count) notes"
+        return search.stringValue.isEmpty ? total : "\(shown) of \(total)"
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int { visible.count }
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
-        let identifier = NSUserInterfaceItemIdentifier("NoteTitle")
-        let field = table.makeView(withIdentifier: identifier, owner: self) as? NSTextField ?? NSTextField(labelWithString: "")
-        field.identifier = identifier
-        field.stringValue = visible[row].title
-        field.lineBreakMode = .byTruncatingTail
-        return field
+        let identifier = NSUserInterfaceItemIdentifier("Note")
+        let cell = table.makeView(withIdentifier: identifier, owner: self) as? NoteCellView ?? NoteCellView()
+        cell.identifier = identifier
+        cell.show(visible[row])
+        return cell
     }
     func tableViewSelectionDidChange(_ notification: Notification) {
         guard !suppressSelection, visible.indices.contains(table.selectedRow) else { return }
@@ -286,7 +343,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                 self.editor.isEditable = true
                 self.window?.isDocumentEdited = false
                 self.editor.setSelectedRange(NSRange(location: 0, length: 0))
-                self.window?.title = "\(NoteNaming.title(from: text)) — Verbatim"
+                self.window?.title = NoteNaming.title(from: text)
                 self.rememberSelection()
                 self.updateList(self.visible)
                 if focusEditor { self.window?.makeFirstResponder(self.editor) }
@@ -315,7 +372,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
             appliedSaveSequence = 0
             original = title
             rememberSelection()
-            window?.title = "\(NoteNaming.title(from: title)) — Verbatim"
+            window?.title = NoteNaming.title(from: title)
             editor.string = title
             editor.isEditable = true
             window?.isDocumentEdited = false
@@ -389,15 +446,18 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         guard self.session === session, receipt.sequence >= appliedSaveSequence else { return }
         appliedSaveSequence = receipt.sequence
         let previousURL = currentURL
+        // Flushing an unedited note hands back its baseline; only a real write changes its date and place.
+        let wrote = receipt.snapshot.url != previousURL || !receipt.snapshot.text.utf8.elementsEqual(original.utf8)
         currentURL = receipt.snapshot.url
         original = receipt.snapshot.text
         rememberSelection()
         window?.isDocumentEdited = !editor.string.utf8.elementsEqual(original.utf8)
-        window?.title = "\(NoteNaming.title(from: editor.string)) — Verbatim"
+        window?.title = NoteNaming.title(from: editor.string)
         if let message = receipt.notice { notice = message; status.stringValue = message; status.toolTip = message }
-        if let index = notes.firstIndex(where: { $0.url == previousURL }) {
+        if wrote, let index = notes.firstIndex(where: { $0.url == previousURL }) {
             notes[index] = NoteRecord(url: receipt.snapshot.url, title: NoteNaming.title(from: original),
                                       modified: Date(), size: receipt.snapshot.bytes.count)
+            notes.sort(by: NoteCatalog.newestFirst)
             applyFilter()
         }
     }
@@ -453,7 +513,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                     self.session = NoteSession(NoteSnapshot(url: state.baseline.url, text: disk))
                     self.appliedSaveSequence = 0
                     self.window?.isDocumentEdited = false
-                    self.window?.title = "\(NoteNaming.title(from: disk)) — Verbatim"
+                    self.window?.title = NoteNaming.title(from: disk)
                 } else {
                     self.cancelLoad()
                     self.currentURL = nil

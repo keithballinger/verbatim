@@ -20,8 +20,8 @@ enum NotesImporter {
             do {
                 switch try source.read(identifier: id) {
                 case .locked: report.locked += 1
-                case .text(let text):
-                    if try copy(text, to: folder, names: &names) { report.imported += 1 }
+                case .text(let text, let modified):
+                    if try copy(text, modified: modified, to: folder, names: &names) { report.imported += 1 }
                     else { report.unchanged += 1 }
                 }
             } catch {
@@ -38,7 +38,7 @@ enum NotesImporter {
         names.reduce(into: [:]) { result, name in result[NoteNaming.key(name), default: []].append(name) }
     }
 
-    private static func copy(_ text: String, to folder: URL, names: inout [String: [String]]) throws -> Bool {
+    private static func copy(_ text: String, modified: Date?, to folder: URL, names: inout [String: [String]]) throws -> Bool {
         let base = NoteNaming.stem(for: NoteNaming.title(from: text))
         var suffix = 1
         while true {
@@ -53,7 +53,7 @@ enum NotesImporter {
             } else {
                 let destination = folder.appendingPathComponent(name)
                 do {
-                    try AtomicFile.create(text, at: destination)
+                    try AtomicFile.create(text, at: destination, modified: modified)
                     names[key, default: []].append(name)
                     return true
                 } catch let error as POSIXError where error.code == .EEXIST {
