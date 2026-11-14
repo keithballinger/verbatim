@@ -52,4 +52,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         mainWindow?.flush() == false ? .terminateCancel : .terminateNow
     }
+
+    func applicationDidResignActive(_ notification: Notification) { _ = mainWindow?.flush() }
 }

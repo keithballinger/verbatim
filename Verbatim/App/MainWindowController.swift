@@ -12,6 +12,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     private var folder: URL?
     private var currentURL: URL?
     private var original = ""
+    private var session: NoteSession?
+    private var appliedSaveSequence = 0
+    private var autosave: DispatchWorkItem?
+    private var notice: String?
     private var searchTask: Task<Void, Never>?
     private var scanTask: Task<Void, Never>?
     private var loadTask: Task<Void, Never>?
@@ -109,6 +113,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     private func useFolder(_ url: URL) {
         loadTask?.cancel()
         currentURL = nil
+        session = nil
+        notice = nil
         editor.string = ""
         original = ""
         editor.isEditable = false
@@ -177,7 +183,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
             table.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
         } else { table.deselectAll(nil) }
         suppressSelection = false
-        if !searching { status.stringValue = "\(records.count) of \(notes.count) notes" }
+        if !searching { status.stringValue = notice ?? "\(records.count) of \(notes.count) notes" }
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int { visible.count }
@@ -204,6 +210,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                 guard let self, !Task.isCancelled else { return }
                 self.currentURL = url
                 self.original = text
+                self.session = NoteSession(NoteSnapshot(url: url, text: text))
+                self.appliedSaveSequence = 0
                 self.editor.string = text
                 self.editor.undoManager?.removeAllActions()
                 self.editor.isEditable = true
@@ -219,11 +227,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         guard let folder, flush() else { return }
         do {
             loadTask?.cancel()
-            let existing = Set(try FileManager.default.contentsOfDirectory(atPath: folder.path))
-            let name = NoteNaming.filename(for: NoteNaming.title(from: title), existing: existing)
-            let url = folder.appendingPathComponent(name)
-            try Data(title.utf8).write(to: url, options: .withoutOverwriting)
-            currentURL = url
+            let snapshot = try NoteStorage.create(text: title, in: folder)
+            currentURL = snapshot.url
+            session = NoteSession(snapshot)
+            appliedSaveSequence = 0
             original = title
             editor.string = title
             editor.isEditable = true
@@ -259,10 +266,47 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
 
     @objc func saveNote(_ sender: Any?) { if flush() { refresh() } }
     @discardableResult func flush() -> Bool {
-        guard let currentURL, editor.string != original else { return true }
-        do { try AtomicFile.write(editor.string, to: currentURL); original = editor.string; return true }
+        autosave?.cancel()
+        guard let session else { return true }
+        do { apply(try session.flush(editor.string), session: session); return true }
         catch { show(error); return false }
     }
+
+    func textDidChange(_ notification: Notification) {
+        guard let session else { return }
+        window?.isDocumentEdited = true
+        autosave?.cancel()
+        let text = editor.string
+        let item = DispatchWorkItem { [weak self, session] in
+            session.save(text) { [weak self, session] result in
+                guard let self, self.session === session else { return }
+                switch result {
+                case .success(let receipt): self.apply(receipt, session: session)
+                case .failure(let error): self.show(error)
+                }
+            }
+        }
+        autosave = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: item)
+    }
+
+    private func apply(_ receipt: SaveReceipt, session: NoteSession) {
+        guard self.session === session, receipt.sequence >= appliedSaveSequence else { return }
+        appliedSaveSequence = receipt.sequence
+        let previousURL = currentURL
+        currentURL = receipt.snapshot.url
+        original = receipt.snapshot.text
+        window?.isDocumentEdited = !editor.string.utf8.elementsEqual(original.utf8)
+        window?.title = "\(NoteNaming.title(from: editor.string)) — Verbatim"
+        if let message = receipt.notice { notice = message; status.stringValue = message }
+        if let index = notes.firstIndex(where: { $0.url == previousURL }) {
+            notes[index] = NoteRecord(url: receipt.snapshot.url, title: NoteNaming.title(from: original),
+                                      modified: Date(), size: receipt.snapshot.bytes.count)
+            applyFilter()
+        }
+    }
+
+    func windowDidResignKey(_ notification: Notification) { _ = flush() }
 
     @objc func trashNote(_ sender: Any?) {
         guard let currentURL, flush() else { return }
@@ -272,6 +316,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                 guard let self else { return }
                 if let error { self.show(error); self.editor.isEditable = true; return }
                 self.currentURL = nil
+                self.session = nil
                 self.editor.string = ""
                 self.original = ""
                 self.refresh()
