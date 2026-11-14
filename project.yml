@@ -15,12 +15,36 @@ targets:
     type: application
     platform: macOS
     sources: [Verbatim]
+    dependencies:
+      - target: verbatim-cli
+        embed: false
+    postBuildScripts:
+      - name: Embed command line tool
+        script: |
+          mkdir -p "${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers"
+          cp "${BUILT_PRODUCTS_DIR}/verbatim" "${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers/verbatim"
+        inputFiles: ['$(BUILT_PRODUCTS_DIR)/verbatim']
+        outputFiles: ['$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/verbatim']
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.verbatim.Verbatim
         INFOPLIST_FILE: Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: Resources/Verbatim.entitlements
         LD_RUNPATH_SEARCH_PATHS: '$(inherited) @executable_path/../Frameworks'
+  verbatim-cli:
+    type: tool
+    platform: macOS
+    sources:
+      - CLI
+      - Verbatim/Import
+      - Verbatim/Notes/AtomicFile.swift
+      - Verbatim/Notes/NoteNaming.swift
+    settings:
+      base:
+        PRODUCT_NAME: verbatim
+        PRODUCT_BUNDLE_IDENTIFIER: org.verbatim.cli
+        CODE_SIGN_ENTITLEMENTS: Resources/CLI.entitlements
+        OTHER_LDFLAGS: '$(inherited) -sectcreate __TEXT __info_plist "$(SRCROOT)/Resources/CLI-Info.plist"'
   VerbatimTests:
     type: bundle.unit-test
     platform: macOS

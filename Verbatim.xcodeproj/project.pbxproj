@@ -9,26 +9,41 @@
 /* Begin PBXBuildFile section */
 		1BFF17CC81FC49B543224AA1 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = F92683A62F448B71FB9AEAA8 /* main.swift */; };
 		24CB3C984E3A9BA2F057801E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E4175124CA520C0D5F14666 /* AppDelegate.swift */; };
+		29A0059FD6EF0A2E30E5A821 /* AtomicFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F1B081E8D75C9E1B61183B /* AtomicFile.swift */; };
 		29E7FF539F50E766684B549C /* AtomicFileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A3A90F326781050D664C096 /* AtomicFileTests.swift */; };
 		345AD0E1702A62E03E4D1FD1 /* ExternalEditTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9082A78B335742CDFFD3C839 /* ExternalEditTests.swift */; };
 		3CC461E08F45D5EBDBA23DB7 /* NamingAndSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F489E20BA2F3539D55869E22 /* NamingAndSearchTests.swift */; };
 		402DE342FCFFCD524DC6E980 /* FolderAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = B152404C75790AAEE33796AB /* FolderAccess.swift */; };
 		477CC1282686E2125D3F2944 /* EditorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A7C39F9EDFBE1B905B97017 /* EditorTests.swift */; };
+		4FD437885DD5B31E65EFD9B8 /* ImporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7F277CB8C575BE8D7FA98B /* ImporterTests.swift */; };
 		5A86657F2B1AA944FA07888F /* FolderWatcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC87C6BD8AB47066EA5DD71 /* FolderWatcherTests.swift */; };
 		6DEAB583C4D777B6F2F91C85 /* VerbatimTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D308608D11E6F6252798C4 /* VerbatimTextView.swift */; };
 		79E8ED6DB5831921F668D9C5 /* LaunchMeasurement.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DBD747E55916F7F2AE0EAA /* LaunchMeasurement.swift */; };
 		838AE368371AC27A8BD63889 /* FolderWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F69E2308B532E72B61D467 /* FolderWatcher.swift */; };
+		899EF251AE981770AC9DA0E5 /* NotesImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB259C39291EE49B3A15B14 /* NotesImporter.swift */; };
+		94E896983ECDB41C0F6A1DA0 /* NotesImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB259C39291EE49B3A15B14 /* NotesImporter.swift */; };
 		B3CFBE906674C0E66DCEA37E /* NoteStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 019855A6819B2D359B101095 /* NoteStorage.swift */; };
 		B417A97140FAAF47BE1BB415 /* NoteCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7E1C74222B1AE7FCBCE61D /* NoteCatalog.swift */; };
 		BB25D88880C10D283CB4D58E /* ScaleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 409BE11D3B2B32A5A780CAE4 /* ScaleTests.swift */; };
 		BEF0A1B5268D47890BC03E2C /* AtomicFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F1B081E8D75C9E1B61183B /* AtomicFile.swift */; };
 		D8C4903837FC8BA564B73DCB /* NoteNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431740044D726ABDD594686B /* NoteNaming.swift */; };
+		E2837FDCDE0332659B3107B3 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FA8FBEC2DF748827A88FC1 /* main.swift */; };
 		E6AB5CF8982B07ECA9CF4806 /* StorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9AF330CA1B20EE4FEED315A /* StorageTests.swift */; };
+		ED7A1C0F28B6E82F3E940E7A /* AppleNotesSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38D179AF3C1603152A5378F /* AppleNotesSource.swift */; };
+		F49B0E29BC3713CBA3290147 /* AppleNotesSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38D179AF3C1603152A5378F /* AppleNotesSource.swift */; };
+		F64FAD5D5C5638B605D10C75 /* NoteNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431740044D726ABDD594686B /* NoteNaming.swift */; };
 		F7132CC0242007B454B585F1 /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EFDA24030679A8E8F46F35E /* MainWindowController.swift */; };
 		FB89D24E5C8753FABC73EAEA /* EditorPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9DDFC9BC368E85B78E479A /* EditorPreferences.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		0CB365212C2AC22BB43D16C0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA97DEB84752B031021C601E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA40A2CC713CA2301BD5F0B8;
+			remoteInfo = "verbatim-cli";
+		};
 		599316D482FD19C535856974 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = AA97DEB84752B031021C601E /* Project object */;
@@ -46,14 +61,19 @@
 		2A7C39F9EDFBE1B905B97017 /* EditorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorTests.swift; sourceTree = "<group>"; };
 		3E4175124CA520C0D5F14666 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		409BE11D3B2B32A5A780CAE4 /* ScaleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScaleTests.swift; sourceTree = "<group>"; };
+		40E4FC6EF141AA8CF7C3F9B8 /* verbatim-cli */ = {isa = PBXFileReference; includeInIndex = 0; path = "verbatim-cli"; sourceTree = BUILT_PRODUCTS_DIR; };
 		431740044D726ABDD594686B /* NoteNaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteNaming.swift; sourceTree = "<group>"; };
+		44FA8FBEC2DF748827A88FC1 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		6F7E1C74222B1AE7FCBCE61D /* NoteCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCatalog.swift; sourceTree = "<group>"; };
 		78F1B081E8D75C9E1B61183B /* AtomicFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtomicFile.swift; sourceTree = "<group>"; };
 		8A3A90F326781050D664C096 /* AtomicFileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtomicFileTests.swift; sourceTree = "<group>"; };
 		8EFDA24030679A8E8F46F35E /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		9082A78B335742CDFFD3C839 /* ExternalEditTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalEditTests.swift; sourceTree = "<group>"; };
 		9427498CDD65F26D99510FB6 /* VerbatimTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VerbatimTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9A7F277CB8C575BE8D7FA98B /* ImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImporterTests.swift; sourceTree = "<group>"; };
 		B152404C75790AAEE33796AB /* FolderAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderAccess.swift; sourceTree = "<group>"; };
+		BFB259C39291EE49B3A15B14 /* NotesImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesImporter.swift; sourceTree = "<group>"; };
+		D38D179AF3C1603152A5378F /* AppleNotesSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleNotesSource.swift; sourceTree = "<group>"; };
 		D9AF330CA1B20EE4FEED315A /* StorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageTests.swift; sourceTree = "<group>"; };
 		DD9DDFC9BC368E85B78E479A /* EditorPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorPreferences.swift; sourceTree = "<group>"; };
 		E4D308608D11E6F6252798C4 /* VerbatimTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerbatimTextView.swift; sourceTree = "<group>"; };
@@ -68,6 +88,7 @@
 			children = (
 				950E5DBDDB720D5B7EE04CBE /* App */,
 				39B768C14EE4652662A35F00 /* Editor */,
+				CDA0B5E4A1CB833324602FCE /* Import */,
 				EDBCC68B82173322BD087903 /* Notes */,
 			);
 			path = Verbatim;
@@ -88,6 +109,7 @@
 				2A7C39F9EDFBE1B905B97017 /* EditorTests.swift */,
 				9082A78B335742CDFFD3C839 /* ExternalEditTests.swift */,
 				0BC87C6BD8AB47066EA5DD71 /* FolderWatcherTests.swift */,
+				9A7F277CB8C575BE8D7FA98B /* ImporterTests.swift */,
 				F489E20BA2F3539D55869E22 /* NamingAndSearchTests.swift */,
 				409BE11D3B2B32A5A780CAE4 /* ScaleTests.swift */,
 				D9AF330CA1B20EE4FEED315A /* StorageTests.swift */,
@@ -110,15 +132,34 @@
 		A96E039E898E4951212BC9A1 = {
 			isa = PBXGroup;
 			children = (
+				BDF36F9D9E5D21661E88A7B6 /* CLI */,
 				37FEE3D815FAE38D0F344413 /* Verbatim */,
 				887A099DC1257D3DA00678E6 /* VerbatimTests */,
 				CECD6488976DDC6234F1846C /* Products */,
 			);
 			sourceTree = "<group>";
 		};
+		BDF36F9D9E5D21661E88A7B6 /* CLI */ = {
+			isa = PBXGroup;
+			children = (
+				44FA8FBEC2DF748827A88FC1 /* main.swift */,
+			);
+			path = CLI;
+			sourceTree = "<group>";
+		};
+		CDA0B5E4A1CB833324602FCE /* Import */ = {
+			isa = PBXGroup;
+			children = (
+				D38D179AF3C1603152A5378F /* AppleNotesSource.swift */,
+				BFB259C39291EE49B3A15B14 /* NotesImporter.swift */,
+			);
+			path = Import;
+			sourceTree = "<group>";
+		};
 		CECD6488976DDC6234F1846C /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				40E4FC6EF141AA8CF7C3F9B8 /* verbatim-cli */,
 				24FC024907B1B2EB732687CE /* Verbatim.app */,
 				9427498CDD65F26D99510FB6 /* VerbatimTests.xctest */,
 			);
@@ -146,10 +187,12 @@
 			buildConfigurationList = 8E0C7A09D4687AF68B3A6593 /* Build configuration list for PBXNativeTarget "Verbatim" */;
 			buildPhases = (
 				5053AA3A48E1F0F437E163C0 /* Sources */,
+				9FC26B94797B88901471B49F /* Embed command line tool */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D0867D42B93EE8E02168E4D6 /* PBXTargetDependency */,
 			);
 			name = Verbatim;
 			packageProductDependencies = (
@@ -157,6 +200,23 @@
 			productName = Verbatim;
 			productReference = 24FC024907B1B2EB732687CE /* Verbatim.app */;
 			productType = "com.apple.product-type.application";
+		};
+		DA40A2CC713CA2301BD5F0B8 /* verbatim-cli */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4A258414CBE0DE294116A09A /* Build configuration list for PBXNativeTarget "verbatim-cli" */;
+			buildPhases = (
+				7903D9C5C05B66675DC0FFFB /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "verbatim-cli";
+			packageProductDependencies = (
+			);
+			productName = "verbatim-cli";
+			productReference = 40E4FC6EF141AA8CF7C3F9B8 /* verbatim-cli */;
+			productType = "com.apple.product-type.tool";
 		};
 		F66BF099E4BE6A4A246B52D7 /* VerbatimTests */ = {
 			isa = PBXNativeTarget;
@@ -188,6 +248,9 @@
 					8DA815718CC792A5855969A5 = {
 						ProvisioningStyle = Manual;
 					};
+					DA40A2CC713CA2301BD5F0B8 = {
+						ProvisioningStyle = Manual;
+					};
 					F66BF099E4BE6A4A246B52D7 = {
 						ProvisioningStyle = Manual;
 					};
@@ -209,9 +272,33 @@
 			targets = (
 				8DA815718CC792A5855969A5 /* Verbatim */,
 				F66BF099E4BE6A4A246B52D7 /* VerbatimTests */,
+				DA40A2CC713CA2301BD5F0B8 /* verbatim-cli */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		9FC26B94797B88901471B49F /* Embed command line tool */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/verbatim",
+			);
+			name = "Embed command line tool";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/verbatim",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "mkdir -p \"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers\"\ncp \"${BUILT_PRODUCTS_DIR}/verbatim\" \"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers/verbatim\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5053AA3A48E1F0F437E163C0 /* Sources */ = {
@@ -219,6 +306,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				24CB3C984E3A9BA2F057801E /* AppDelegate.swift in Sources */,
+				ED7A1C0F28B6E82F3E940E7A /* AppleNotesSource.swift in Sources */,
 				BEF0A1B5268D47890BC03E2C /* AtomicFile.swift in Sources */,
 				FB89D24E5C8753FABC73EAEA /* EditorPreferences.swift in Sources */,
 				402DE342FCFFCD524DC6E980 /* FolderAccess.swift in Sources */,
@@ -228,6 +316,7 @@
 				B417A97140FAAF47BE1BB415 /* NoteCatalog.swift in Sources */,
 				D8C4903837FC8BA564B73DCB /* NoteNaming.swift in Sources */,
 				B3CFBE906674C0E66DCEA37E /* NoteStorage.swift in Sources */,
+				899EF251AE981770AC9DA0E5 /* NotesImporter.swift in Sources */,
 				6DEAB583C4D777B6F2F91C85 /* VerbatimTextView.swift in Sources */,
 				1BFF17CC81FC49B543224AA1 /* main.swift in Sources */,
 			);
@@ -241,15 +330,33 @@
 				477CC1282686E2125D3F2944 /* EditorTests.swift in Sources */,
 				345AD0E1702A62E03E4D1FD1 /* ExternalEditTests.swift in Sources */,
 				5A86657F2B1AA944FA07888F /* FolderWatcherTests.swift in Sources */,
+				4FD437885DD5B31E65EFD9B8 /* ImporterTests.swift in Sources */,
 				3CC461E08F45D5EBDBA23DB7 /* NamingAndSearchTests.swift in Sources */,
 				BB25D88880C10D283CB4D58E /* ScaleTests.swift in Sources */,
 				E6AB5CF8982B07ECA9CF4806 /* StorageTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7903D9C5C05B66675DC0FFFB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F49B0E29BC3713CBA3290147 /* AppleNotesSource.swift in Sources */,
+				29A0059FD6EF0A2E30E5A821 /* AtomicFile.swift in Sources */,
+				F64FAD5D5C5638B605D10C75 /* NoteNaming.swift in Sources */,
+				94E896983ECDB41C0F6A1DA0 /* NotesImporter.swift in Sources */,
+				E2837FDCDE0332659B3107B3 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		D0867D42B93EE8E02168E4D6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA40A2CC713CA2301BD5F0B8 /* verbatim-cli */;
+			targetProxy = 0CB365212C2AC22BB43D16C0 /* PBXContainerItemProxy */;
+		};
 		E137DC0D9563FBC87CAF1187 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 8DA815718CC792A5855969A5 /* Verbatim */;
@@ -274,6 +381,22 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Verbatim.app/Contents/MacOS/Verbatim";
 			};
 			name = Debug;
+		};
+		24F0857C1C75FDFC35B2019D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Resources/CLI.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = "$(inherited) -sectcreate __TEXT __info_plist \"$(SRCROOT)/Resources/CLI-Info.plist\"";
+				PRODUCT_BUNDLE_IDENTIFIER = org.verbatim.cli;
+				PRODUCT_NAME = verbatim;
+				SDKROOT = macosx;
+			};
+			name = Release;
 		};
 		2EC34DE1F5E697A7A331BF3F /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -378,6 +501,22 @@
 			};
 			name = Debug;
 		};
+		DAB753CD63F19F402671BF61 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Resources/CLI.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				OTHER_LDFLAGS = "$(inherited) -sectcreate __TEXT __info_plist \"$(SRCROOT)/Resources/CLI-Info.plist\"";
+				PRODUCT_BUNDLE_IDENTIFIER = org.verbatim.cli;
+				PRODUCT_NAME = verbatim;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
 		FEE55678A9B3CE5477039553 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -453,6 +592,15 @@
 			buildConfigurations = (
 				13EEBB84CC9AB0994B193532 /* Debug */,
 				2EC34DE1F5E697A7A331BF3F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4A258414CBE0DE294116A09A /* Build configuration list for PBXNativeTarget "verbatim-cli" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DAB753CD63F19F402671BF61 /* Debug */,
+				24F0857C1C75FDFC35B2019D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

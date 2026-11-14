@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>org.verbatim.cli</string>
+<key>CFBundleName</key><string>verbatim</string>
+<key>NSAppleEventsUsageDescription</key><string>Verbatim copies the plain text of your Apple Notes into .txt files when you run --import-notes. Your original notes are never modified.</string>
+</dict></plist>

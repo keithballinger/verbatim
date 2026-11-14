@@ -34,7 +34,8 @@ final class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
         root.translatesAutoresizingMaskIntoConstraints = false
         window.contentView?.addSubview(root)
         families.addItems(withTitles: NSFontManager.shared.availableFontFamilies.sorted())
-        let family = font.familyName ?? "Menlo"
+        families.insertItem(withTitle: "System Monospaced", at: 0)
+        let family = font.familyName?.hasPrefix(".") == true ? "System Monospaced" : (font.familyName ?? "Menlo")
         if families.indexOfItem(withTitle: family) < 0 { families.addItem(withTitle: family) }
         families.selectItem(withTitle: family)
         families.target = self
@@ -69,7 +70,8 @@ final class SettingsWindowController: NSWindowController, NSTextFieldDelegate {
             return
         }
         let family = families.titleOfSelectedItem ?? "Menlo"
-        let font = NSFontManager.shared.font(withFamily: family, traits: [], weight: 5, size: points)
+        let font = (family == "System Monospaced" ? NSFont.monospacedSystemFont(ofSize: points, weight: .regular)
+            : NSFontManager.shared.font(withFamily: family, traits: [], weight: 5, size: points))
             ?? .monospacedSystemFont(ofSize: points, weight: .regular)
         selectedFont = font
         EditorPreferences.save(font)
