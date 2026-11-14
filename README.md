@@ -10,7 +10,8 @@ written atomically without trimming or normalizing the content.
 
 ## Build
 
-Requires Xcode with macOS SDK and command-line tools selected.
+Requires Xcode 16 or later with the macOS SDK and command-line tools selected
+(the deployment target remains macOS 14). Tested with Xcode 27.2.
 
 ```sh
 make build   # universal release app: .build/Build/Products/Release/Verbatim.app
@@ -34,7 +35,8 @@ Notes Folder…** to change it.
 
 - **Cmd+L:** search titles and bodies; use Up/Down to select a result.
 - **Return in search:** open the selected result, or create a note from the query
-  when there are no matches and the background search has finished.
+  when there are no matches. If body search is still running, Return waits for
+  its result before creating a note.
 - **Cmd+N:** create an empty note. **Cmd+F:** find inside the current note.
 - **Cmd+S:** save immediately. **Cmd+Delete:** move the current note to Trash.
 - **Cmd+,**: choose the editor font and size. Spelling and grammar checking are
@@ -55,6 +57,8 @@ subfolders and symlinks are ignored. Files must be valid UTF-8. Unsupported file
 are left untouched. The first line is the title, with **Untitled** as the display
 fallback for an empty or whitespace-only first line. Existing text is never
 trimmed, normalized, or rewritten merely by opening it.
+UTF-8 byte-order marks and existing line endings are preserved; a leading
+byte-order mark is excluded from the displayed title and derived filename.
 
 After roughly 500ms of inactivity, edits save in the background. Changing the
 first line also changes the filename during that save. Unsafe filename
@@ -95,6 +99,23 @@ The universal build includes arm64 and x86_64. Signing is local/ad hoc by defaul
 public distribution needs your own Developer ID signing and notarization.
 Cold launch below 300ms, Intel runtime behavior, macOS 14 runtime behavior, and
 real third-party sync services require separate verification.
+
+Local measurements on Apple Silicon with Xcode 27.2: the Debug test's 10,000
+recently created notes took approximately 97ms to enumerate, 0.3ms to open one,
+and 344ms for a first body search. Five Release process launches with an already
+authorized folder reached a loaded editor in **318, 274, 235, 276, and 269ms**.
+These include process startup but do not establish cold-cache timing or first
+frame presentation. A later first launch after rebuilding took **444ms**, followed
+by **255, 273, and 269ms** launches. The 300ms target is **not consistently met**
+on this development machine.
+To reproduce the launch measurement after building and authorizing a folder:
+
+```sh
+# Close Verbatim first; do not type into it while the benchmark runs.
+python3 scripts/measure-launch.py --runs 5
+```
+
+The script terminates only the processes it creates, immediately after readiness.
 
 ## Import Apple Notes
 

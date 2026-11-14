@@ -27,6 +27,16 @@ final class AtomicFileTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: url), bytes)
     }
 
+    func testBOMAndLineEndingsAreRetainedExactly() throws {
+        let url = folder.appendingPathComponent("bom.txt")
+        let text = "\u{feff}Title\r\nbody\r\n"
+        try Data(text.utf8).write(to: url)
+        let decoded = try AtomicFile.read(url)
+        XCTAssertEqual(Data(decoded.utf8), Data(text.utf8))
+        XCTAssertEqual(NoteNaming.title(from: decoded), "Title")
+        XCTAssertEqual(try NoteCatalog.title(url), "Title")
+    }
+
     func testSymlinkIsNotOverwritten() throws {
         let target = folder.appendingPathComponent("original.txt")
         let link = folder.appendingPathComponent("link.txt")

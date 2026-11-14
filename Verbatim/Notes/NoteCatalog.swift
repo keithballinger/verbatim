@@ -35,7 +35,7 @@ enum NoteCatalog {
             }
             data.append(chunk)
         }
-        guard let line = String(data: data, encoding: .utf8) else { throw CocoaError(.fileReadInapplicableStringEncoding) }
+        let line = try AtomicFile.decode(data)
         return NoteNaming.title(from: line)
     }
 }

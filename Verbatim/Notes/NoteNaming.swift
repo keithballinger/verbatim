@@ -2,7 +2,8 @@ import Foundation
 
 enum NoteNaming {
     static func title(from text: String) -> String {
-        let line = String(text.prefix(while: { !$0.isNewline }))
+        let content = text.hasPrefix("\u{feff}") ? text.dropFirst() : text[...]
+        let line = String(content.prefix(while: { !$0.isNewline }))
         return line.trimmingCharacters(in: .whitespaces).isEmpty ? "Untitled" : line
     }
 

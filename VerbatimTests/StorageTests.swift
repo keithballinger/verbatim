@@ -53,6 +53,16 @@ final class StorageTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: result.snapshot.url), Data(updated.utf8))
     }
 
+    func testBOMBodyEditSavesWithoutFalseConflictOrByteRemoval() throws {
+        let first = try NoteStorage.create(text: "\u{feff}Title\r\nbody", in: folder)
+        let loaded = try NoteStorage.load(first.url)
+        let edited = "\u{feff}Title\r\nnew body"
+        let result = try NoteStorage.save(edited, over: loaded)
+        XCTAssertNil(result.notice)
+        XCTAssertEqual(result.snapshot.url, first.url)
+        XCTAssertEqual(try Data(contentsOf: first.url), Data(edited.utf8))
+    }
+
     func testAtomicCreateRefusesCollisionAndLeavesNoTemporaryFile() throws {
         let first = try NoteStorage.create(text: "Title\noriginal", in: folder)
         XCTAssertThrowsError(try AtomicFile.create("replacement", at: first.url))

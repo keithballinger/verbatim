@@ -26,7 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         file.addItem(withTitle: "New Note", action: #selector(MainWindowController.newNote(_:)), keyEquivalent: "n").target = mainWindow
         file.addItem(withTitle: "Choose Notes Folder…", action: #selector(MainWindowController.chooseFolder(_:)), keyEquivalent: "o").target = mainWindow
         file.addItem(withTitle: "Save", action: #selector(MainWindowController.saveNote(_:)), keyEquivalent: "s").target = mainWindow
-        file.addItem(withTitle: "Move Note to Trash", action: #selector(MainWindowController.trashNote(_:)), keyEquivalent: "\u{8}").target = mainWindow
+        file.addItem(withTitle: "Move Note to Trash", action: #selector(MainWindowController.trashNote(_:)), keyEquivalent: "\u{7f}").target = mainWindow
         file.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         let edit = NSMenu()
         edit.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")

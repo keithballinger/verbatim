@@ -7,7 +7,7 @@ final class FolderWatcher {
     private var stream: FSEventStreamRef?
     private let queue = DispatchQueue(label: "org.verbatim.folder-events", qos: .utility)
 
-    init(folder: URL, onChange: @escaping () -> Void) throws {
+    init(folder: URL, onChange: @escaping (Set<String>?) -> Void) throws {
         let handler = EventHandler(onChange)
         var context = FSEventStreamContext(version: 0, info: Unmanaged.passUnretained(handler).toOpaque(),
             retain: { pointer in
@@ -17,10 +17,17 @@ final class FolderWatcher {
             }, release: { pointer in
                 if let pointer { Unmanaged<EventHandler>.fromOpaque(pointer).release() }
             }, copyDescription: nil)
-        let flags = FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagWatchRoot)
-        guard let stream = FSEventStreamCreate(nil, { _, info, _, _, _, _ in
+        let flags = FSEventStreamCreateFlags(kFSEventStreamCreateFlagFileEvents | kFSEventStreamCreateFlagWatchRoot | kFSEventStreamCreateFlagUseCFTypes)
+        guard let stream = FSEventStreamCreate(nil, { _, info, count, paths, flags, _ in
             guard let info else { return }
-            Unmanaged<EventHandler>.fromOpaque(info).takeUnretainedValue().callback()
+            let handler = Unmanaged<EventHandler>.fromOpaque(info).takeUnretainedValue()
+            let fullScanFlags = FSEventStreamEventFlags(kFSEventStreamEventFlagMustScanSubDirs | kFSEventStreamEventFlagUserDropped | kFSEventStreamEventFlagKernelDropped | kFSEventStreamEventFlagRootChanged)
+            if (0..<count).contains(where: { flags[$0] & fullScanFlags != 0 }) {
+                handler.callback(nil)
+            } else {
+                let names = Unmanaged<NSArray>.fromOpaque(paths).takeUnretainedValue() as? [String] ?? []
+                handler.callback(Set(names.map { URL(fileURLWithPath: $0).lastPathComponent }))
+            }
         }, &context, [folder.path] as CFArray, FSEventStreamEventId(kFSEventStreamEventIdSinceNow), 0.2, flags) else {
             throw CocoaError(.fileReadUnknown)
         }
@@ -44,6 +51,6 @@ final class FolderWatcher {
 }
 
 private final class EventHandler {
-    let callback: () -> Void
-    init(_ callback: @escaping () -> Void) { self.callback = callback }
+    let callback: (Set<String>?) -> Void
+    init(_ callback: @escaping (Set<String>?) -> Void) { self.callback = callback }
 }

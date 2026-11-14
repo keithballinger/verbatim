@@ -22,9 +22,12 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     private var loadTask: Task<Void, Never>?
     private var suppressSelection = false
     private var searching = false
+    private var pendingReturnQuery: String?
     private var generation = 0
     private var watcher: FolderWatcher?
     private var watchDebounce: DispatchWorkItem?
+    private var changedNames = Set<String>()
+    private var reloadAllTitles = false
     private var trashInProgress = false
     private var settings: SettingsWindowController?
     private var initialCatalogLoaded = false
@@ -131,10 +134,13 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     func useFolder(_ url: URL) {
         watcher = nil
         watchDebounce?.cancel()
+        changedNames = []
+        reloadAllTitles = false
         cancelLoad()
         currentURL = nil
         session = nil
         notice = nil
+        pendingReturnQuery = nil
         editor.string = ""
         original = ""
         notes = []
@@ -143,8 +149,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         folder = url
         window?.representedURL = url
         do {
-            watcher = try FolderWatcher(folder: url) { [weak self] in
-                DispatchQueue.main.async { self?.folderChanged() }
+            watcher = try FolderWatcher(folder: url) { [weak self] names in
+                DispatchQueue.main.async {
+                    guard let self, self.folder == url else { return }
+                    self.folderChanged(names)
+                }
             }
         } catch { show(error) }
         refresh()
@@ -155,7 +164,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         }
     }
 
-    private func refresh() {
+    private func refresh(forceTitles: Set<String> = [], allTitles: Bool = false) {
         guard let folder else { return }
         generation += 1
         let version = generation
@@ -179,6 +188,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                     else { self.create(title: "") }
                 }
                 let changed = records.filter { record in
+                    if allTitles || forceTitles.contains(record.url.lastPathComponent) { return true }
                     guard let old = prior[record.url] else { return true }
                     return old.modified != record.modified || old.size != record.size
                 }
@@ -195,7 +205,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         }
     }
 
-    func controlTextDidChange(_ obj: Notification) { applyFilter() }
+    func controlTextDidChange(_ obj: Notification) { pendingReturnQuery = nil; applyFilter() }
 
     private func applyFilter() {
         searchTask?.cancel()
@@ -217,6 +227,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                 try Task.checkCancellation()
                 self.searching = false
                 self.updateList(result)
+                if self.pendingReturnQuery == query {
+                    self.pendingReturnQuery = nil
+                    self.activateSearchResult()
+                }
             } catch is CancellationError { } catch { self?.show(error) }
         }
     }
@@ -246,11 +260,13 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         open(visible[table.selectedRow].url)
     }
 
-    func open(_ url: URL) {
+    func open(_ url: URL, focusEditor: Bool = false) {
         guard !trashInProgress else { return }
+        pendingReturnQuery = nil
         if url == currentURL {
             cancelLoad()
             editor.isEditable = session != nil
+            if focusEditor { window?.makeFirstResponder(editor) }
             return
         }
         guard flush() else { updateList(visible); return }
@@ -273,6 +289,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                 self.window?.title = "\(NoteNaming.title(from: text)) — Verbatim"
                 self.rememberSelection()
                 self.updateList(self.visible)
+                if focusEditor { self.window?.makeFirstResponder(self.editor) }
                 LaunchMeasurement.editorReady()
             } catch {
                 guard let self, !Task.isCancelled else { return }
@@ -289,6 +306,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     @objc func newNote(_ sender: Any?) { create(title: "") }
     private func create(title: String) {
         guard !trashInProgress, let folder, flush() else { return }
+        pendingReturnQuery = nil
         do {
             cancelLoad()
             let snapshot = try NoteStorage.create(text: title, in: folder)
@@ -320,16 +338,24 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
             return true
         }
         if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-            guard !searching else { status.stringValue = "Search is still running. Press Return when it finishes."; return true }
-            if visible.isEmpty { create(title: search.stringValue) }
-            else {
-                let row = table.selectedRow >= 0 ? table.selectedRow : 0
-                table.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
-                window?.makeFirstResponder(editor)
-            }
+            if searching, visible.isEmpty {
+                pendingReturnQuery = search.stringValue
+                status.stringValue = "Checking note text before creating a note…"
+            } else { activateSearchResult() }
             return true
         }
         return false
+    }
+
+    private func activateSearchResult() {
+        if visible.isEmpty { create(title: search.stringValue) }
+        else {
+            let row = table.selectedRow >= 0 ? table.selectedRow : 0
+            suppressSelection = true
+            table.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+            suppressSelection = false
+            open(visible[row].url, focusEditor: true)
+        }
     }
 
     @objc func saveNote(_ sender: Any?) { if flush() { refresh() } }
@@ -368,7 +394,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         rememberSelection()
         window?.isDocumentEdited = !editor.string.utf8.elementsEqual(original.utf8)
         window?.title = "\(NoteNaming.title(from: editor.string)) — Verbatim"
-        if let message = receipt.notice { notice = message; status.stringValue = message }
+        if let message = receipt.notice { notice = message; status.stringValue = message; status.toolTip = message }
         if let index = notes.firstIndex(where: { $0.url == previousURL }) {
             notes[index] = NoteRecord(url: receipt.snapshot.url, title: NoteNaming.title(from: original),
                                       modified: Date(), size: receipt.snapshot.bytes.count)
@@ -378,14 +404,24 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
 
     func windowDidResignKey(_ notification: Notification) { _ = flush() }
 
-    private func folderChanged() {
+    private func folderChanged(_ names: Set<String>?) {
+        if let names { changedNames.formUnion(names) } else { reloadAllTitles = true }
         watchDebounce?.cancel()
         let item = DispatchWorkItem { [weak self] in
             guard let self else { return }
             self.searchTask?.cancel()
-            Task { await self.worker.invalidate() }
             self.reconcileOpenNote()
-            self.refresh()
+            let changedFolder = self.folder
+            let names = self.changedNames
+            let all = self.reloadAllTitles
+            self.changedNames = []
+            self.reloadAllTitles = false
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                await self.worker.invalidate()
+                guard self.folder == changedFolder else { return }
+                self.refresh(forceTitles: names, allTitles: all)
+            }
         }
         watchDebounce = item
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: item)

@@ -10,7 +10,7 @@ final class FolderWatcherTests: XCTestCase {
         let renamed = folder.appendingPathComponent("two.txt")
         let lock = NSLock()
         var pending: XCTestExpectation?
-        let watcher = try FolderWatcher(folder: folder) {
+        let watcher = try FolderWatcher(folder: folder) { _ in
             lock.lock()
             let expectation = pending
             pending = nil
