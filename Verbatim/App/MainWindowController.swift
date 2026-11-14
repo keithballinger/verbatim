@@ -22,6 +22,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     private var suppressSelection = false
     private var searching = false
     private var generation = 0
+    private var watcher: FolderWatcher?
+    private var watchDebounce: DispatchWorkItem?
+    private var trashInProgress = false
 
     init() {
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700),
@@ -101,7 +104,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     }
 
     @objc func chooseFolder(_ sender: Any?) {
-        guard flush(), let window else { return }
+        guard !trashInProgress, flush(), let window else { return }
         access.choose(for: window) { [weak self] result in
             switch result {
             case .success(let url): if let url { self?.useFolder(url) }
@@ -110,7 +113,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         }
     }
 
-    private func useFolder(_ url: URL) {
+    func useFolder(_ url: URL) {
+        watcher = nil
+        watchDebounce?.cancel()
         loadTask?.cancel()
         currentURL = nil
         session = nil
@@ -120,6 +125,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         editor.isEditable = false
         folder = url
         window?.representedURL = url
+        do {
+            watcher = try FolderWatcher(folder: url) { [weak self] in
+                DispatchQueue.main.async { self?.folderChanged() }
+            }
+        } catch { show(error) }
         refresh()
     }
 
@@ -134,10 +144,19 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
             do {
                 let records = try await Task.detached(priority: .userInitiated) { try NoteCatalog.list(folder) }.value
                 guard let self, !Task.isCancelled, self.generation == version else { return }
-                self.notes = records
+                let prior = Dictionary(uniqueKeysWithValues: self.notes.map { ($0.url, $0) })
+                self.notes = records.map { record in
+                    var record = record
+                    if let old = prior[record.url], old.modified == record.modified, old.size == record.size { record.title = old.title }
+                    return record
+                }
                 self.applyFilter()
-                for start in stride(from: 0, to: records.count, by: 128) {
-                    let batch = Array(records[start..<min(start + 128, records.count)])
+                let changed = records.filter { record in
+                    guard let old = prior[record.url] else { return true }
+                    return old.modified != record.modified || old.size != record.size
+                }
+                for start in stride(from: 0, to: changed.count, by: 128) {
+                    let batch = Array(changed[start..<min(start + 128, changed.count)])
                     let titles = try await self.worker.titles(batch)
                     guard !Task.isCancelled, self.generation == version else { return }
                     for index in self.notes.indices {
@@ -200,8 +219,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         open(visible[table.selectedRow].url)
     }
 
-    private func open(_ url: URL) {
-        guard url != currentURL, flush() else { return }
+    func open(_ url: URL) {
+        guard !trashInProgress, url != currentURL, flush() else { return }
         loadTask?.cancel()
         editor.isEditable = false
         loadTask = Task { @MainActor [weak self] in
@@ -217,14 +236,18 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                 self.editor.isEditable = true
                 self.editor.setSelectedRange(NSRange(location: 0, length: 0))
                 self.window?.title = "\(NoteNaming.title(from: text)) — Verbatim"
-            } catch { self?.show(error) }
+            } catch {
+                guard let self, !Task.isCancelled else { return }
+                self.editor.isEditable = self.session != nil
+                self.show(error)
+            }
         }
     }
 
     @objc func focusSearch(_ sender: Any?) { window?.makeFirstResponder(search); search.selectText(nil) }
     @objc func newNote(_ sender: Any?) { create(title: "") }
     private func create(title: String) {
-        guard let folder, flush() else { return }
+        guard !trashInProgress, let folder, flush() else { return }
         do {
             loadTask?.cancel()
             let snapshot = try NoteStorage.create(text: title, in: folder)
@@ -308,12 +331,68 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
 
     func windowDidResignKey(_ notification: Notification) { _ = flush() }
 
+    private func folderChanged() {
+        watchDebounce?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.searchTask?.cancel()
+            Task { await self.worker.invalidate() }
+            self.reconcileOpenNote()
+            self.refresh()
+        }
+        watchDebounce = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: item)
+    }
+
+    private func reconcileOpenNote() {
+        guard !trashInProgress, let session else { return }
+        session.inspectDisk { [weak self, session] result in
+            guard let self, self.session === session else { return }
+            do {
+                let state = try result.get()
+                guard state.sequence >= self.appliedSaveSequence else { return }
+                if let disk = state.diskText, disk.utf8.elementsEqual(state.baseline.text.utf8) { return }
+                if !self.editor.string.utf8.elementsEqual(state.baseline.text.utf8) {
+                    self.autosave?.cancel()
+                    session.save(self.editor.string) { [weak self, session] result in
+                        guard let self, self.session === session else { return }
+                        switch result {
+                        case .success(let receipt): self.apply(receipt, session: session); self.refresh()
+                        case .failure(let error): self.show(error)
+                        }
+                    }
+                } else if let disk = state.diskText {
+                    let selection = self.editor.selectedRange()
+                    self.editor.string = disk
+                    self.editor.undoManager?.removeAllActions()
+                    self.editor.setSelectedRange(NSRange(location: min(selection.location, (disk as NSString).length), length: 0))
+                    self.original = disk
+                    self.session = NoteSession(NoteSnapshot(url: state.baseline.url, text: disk))
+                    self.appliedSaveSequence = 0
+                    self.window?.title = "\(NoteNaming.title(from: disk)) — Verbatim"
+                } else {
+                    self.loadTask?.cancel()
+                    self.currentURL = nil
+                    self.session = nil
+                    self.editor.string = ""
+                    self.editor.isEditable = false
+                    self.original = ""
+                    self.notice = "The open note was moved or removed outside Verbatim."
+                    self.status.stringValue = self.notice!
+                }
+            } catch { self.show(error) }
+        }
+    }
+
     @objc func trashNote(_ sender: Any?) {
-        guard let currentURL, flush() else { return }
+        guard !trashInProgress, flush(), let currentURL else { return }
+        trashInProgress = true
+        loadTask?.cancel()
         editor.isEditable = false
         NSWorkspace.shared.recycle([currentURL]) { [weak self] _, error in
             DispatchQueue.main.async {
                 guard let self else { return }
+                self.trashInProgress = false
                 if let error { self.show(error); self.editor.isEditable = true; return }
                 self.currentURL = nil
                 self.session = nil

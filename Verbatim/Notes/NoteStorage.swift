@@ -12,6 +12,12 @@ struct SaveReceipt {
     let notice: String?
 }
 
+struct DiskState {
+    let baseline: NoteSnapshot
+    let diskText: String?
+    let sequence: Int
+}
+
 enum NoteStorage {
     static func load(_ url: URL) throws -> NoteSnapshot {
         NoteSnapshot(url: url, text: try AtomicFile.read(url))
@@ -97,6 +103,16 @@ final class NoteSession {
     func save(_ text: String, completion: @escaping (Result<SaveReceipt, Error>) -> Void) {
         queue.async { [self] in
             let result = Result { try performSave(text) }
+            DispatchQueue.main.async { completion(result) }
+        }
+    }
+
+    func inspectDisk(completion: @escaping (Result<DiskState, Error>) -> Void) {
+        queue.async { [self] in
+            let result = Result {
+                let text = FileManager.default.fileExists(atPath: snapshot.url.path) ? try AtomicFile.read(snapshot.url) : nil
+                return DiskState(baseline: snapshot, diskText: text, sequence: sequence)
+            }
             DispatchQueue.main.async { completion(result) }
         }
     }
