@@ -89,13 +89,15 @@ final class NoteSession {
     private let queue = DispatchQueue(label: "org.verbatim.save", qos: .userInitiated)
     private var snapshot: NoteSnapshot
     private var sequence = 0
+    private var pendingNotice: String?
     init(_ snapshot: NoteSnapshot) { self.snapshot = snapshot }
 
     private func performSave(_ text: String) throws -> SaveReceipt {
         sequence += 1
-        let receipt = try NoteStorage.save(text, over: snapshot, sequence: sequence)
-        snapshot = receipt.snapshot
-        return receipt
+        let result = try NoteStorage.save(text, over: snapshot, sequence: sequence)
+        snapshot = result.snapshot
+        if let notice = result.notice { pendingNotice = notice }
+        return SaveReceipt(snapshot: snapshot, sequence: sequence, notice: pendingNotice)
     }
 
     func flush(_ text: String) throws -> SaveReceipt { try queue.sync { try performSave(text) } }

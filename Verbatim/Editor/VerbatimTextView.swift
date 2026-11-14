@@ -39,6 +39,20 @@ final class VerbatimTextView: NSTextView {
         get { super.smartInsertDeleteEnabled }
         set { super.smartInsertDeleteEnabled = false }
     }
+    override var inlinePredictionType: NSTextInputTraitType {
+        get { super.inlinePredictionType }
+        set { super.inlinePredictionType = .no }
+    }
+    @available(macOS 15.0, *)
+    override var mathExpressionCompletionType: NSTextInputTraitType {
+        get { super.mathExpressionCompletionType }
+        set { super.mathExpressionCompletionType = .no }
+    }
+    @available(macOS 15.0, *)
+    override var writingToolsBehavior: NSWritingToolsBehavior {
+        get { super.writingToolsBehavior }
+        set { super.writingToolsBehavior = .none }
+    }
 
     convenience init() { self.init(frame: .zero, textContainer: nil) }
 
@@ -60,6 +74,11 @@ final class VerbatimTextView: NSTextView {
         isAutomaticLinkDetectionEnabled = false
         isAutomaticDataDetectionEnabled = false
         isAutomaticTextCompletionEnabled = false
+        inlinePredictionType = .no
+        if #available(macOS 15.0, *) {
+            mathExpressionCompletionType = .no
+            writingToolsBehavior = .none
+        }
         isContinuousSpellCheckingEnabled = false
         isGrammarCheckingEnabled = false
         smartInsertDeleteEnabled = false

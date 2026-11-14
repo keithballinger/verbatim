@@ -119,7 +119,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     }
 
     @objc func chooseFolder(_ sender: Any?) {
-        guard !trashInProgress, flush(), let window else { return }
+        guard !trashInProgress, flush(), let window, window.attachedSheet == nil else { return }
         access.choose(for: window) { [weak self] result in
             switch result {
             case .success(let url): if let url { self?.useFolder(url) }
@@ -131,7 +131,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     func useFolder(_ url: URL) {
         watcher = nil
         watchDebounce?.cancel()
-        loadTask?.cancel()
+        cancelLoad()
         currentURL = nil
         session = nil
         notice = nil
@@ -247,8 +247,14 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     }
 
     func open(_ url: URL) {
-        guard !trashInProgress, url != currentURL, flush() else { return }
-        loadTask?.cancel()
+        guard !trashInProgress else { return }
+        if url == currentURL {
+            cancelLoad()
+            editor.isEditable = session != nil
+            return
+        }
+        guard flush() else { updateList(visible); return }
+        cancelLoad()
         editor.isEditable = false
         loadTask = Task { @MainActor [weak self] in
             do {
@@ -262,6 +268,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                 self.editor.string = text
                 self.editor.undoManager?.removeAllActions()
                 self.editor.isEditable = true
+                self.window?.isDocumentEdited = false
                 self.editor.setSelectedRange(NSRange(location: 0, length: 0))
                 self.window?.title = "\(NoteNaming.title(from: text)) — Verbatim"
                 self.rememberSelection()
@@ -272,6 +279,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                 self.editor.isEditable = self.session != nil
                 self.loadTask = nil
                 self.show(error)
+                self.updateList(self.visible)
                 if self.initialCatalogLoaded, self.session == nil, let first = self.notes.first, first.url != url { self.open(first.url) }
             }
         }
@@ -282,7 +290,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     private func create(title: String) {
         guard !trashInProgress, let folder, flush() else { return }
         do {
-            loadTask?.cancel()
+            cancelLoad()
             let snapshot = try NoteStorage.create(text: title, in: folder)
             currentURL = snapshot.url
             session = NoteSession(snapshot)
@@ -292,6 +300,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
             window?.title = "\(NoteNaming.title(from: title)) — Verbatim"
             editor.string = title
             editor.isEditable = true
+            window?.isDocumentEdited = false
             editor.undoManager?.removeAllActions()
             editor.setSelectedRange(NSRange(location: (title as NSString).length, length: 0))
             search.stringValue = ""
@@ -325,6 +334,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
 
     @objc func saveNote(_ sender: Any?) { if flush() { refresh() } }
     @discardableResult func flush() -> Bool {
+        guard !trashInProgress else { status.stringValue = "Moving note to Trash…"; return false }
         autosave?.cancel()
         guard let session else { return true }
         do { apply(try session.flush(editor.string), session: session); return true }
@@ -387,7 +397,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
             guard let self, self.session === session else { return }
             do {
                 let state = try result.get()
-                guard state.sequence >= self.appliedSaveSequence else { return }
+                guard state.sequence >= self.appliedSaveSequence else { self.reconcileOpenNote(); return }
                 if let disk = state.diskText, disk.utf8.elementsEqual(state.baseline.text.utf8) { return }
                 if !self.editor.string.utf8.elementsEqual(state.baseline.text.utf8) {
                     self.autosave?.cancel()
@@ -406,14 +416,16 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                     self.original = disk
                     self.session = NoteSession(NoteSnapshot(url: state.baseline.url, text: disk))
                     self.appliedSaveSequence = 0
+                    self.window?.isDocumentEdited = false
                     self.window?.title = "\(NoteNaming.title(from: disk)) — Verbatim"
                 } else {
-                    self.loadTask?.cancel()
+                    self.cancelLoad()
                     self.currentURL = nil
                     self.session = nil
                     self.editor.string = ""
                     self.editor.isEditable = false
                     self.original = ""
+                    self.window?.isDocumentEdited = false
                     self.notice = "The open note was moved or removed outside Verbatim."
                     self.status.stringValue = self.notice!
                 }
@@ -428,6 +440,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     private func rememberSelection() {
         defaults.set(currentURL?.lastPathComponent, forKey: "lastNoteFilename")
         defaults.set(folder?.path, forKey: "lastNoteFolder")
+    }
+
+    private func cancelLoad() {
+        loadTask?.cancel()
+        loadTask = nil
     }
 
     @objc func showSettings(_ sender: Any?) {
@@ -461,7 +478,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     @objc func trashNote(_ sender: Any?) {
         guard !trashInProgress, flush(), let currentURL else { return }
         trashInProgress = true
-        loadTask?.cancel()
+        cancelLoad()
         editor.isEditable = false
         NSWorkspace.shared.recycle([currentURL]) { [weak self] _, error in
             DispatchQueue.main.async {

@@ -3,6 +3,32 @@ import XCTest
 @testable import Verbatim
 
 final class ExternalEditTests: XCTestCase {
+    @MainActor func testReturningToCurrentNoteCancelsPendingLoadAndFolderSwitchStillLoads() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let other = root.appendingPathComponent("other")
+        try FileManager.default.createDirectory(at: other, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let a = try NoteStorage.create(text: "A\none", in: root)
+        let b = try NoteStorage.create(text: "B\ntwo", in: root)
+        let c = try NoteStorage.create(text: "C\nthree", in: other)
+        let suite = "VerbatimTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let controller = MainWindowController(defaults: defaults)
+        controller.useFolder(root)
+        controller.open(a.url)
+        try await eventually { controller.editor.isEditable && controller.editor.string == a.text }
+        controller.open(b.url)
+        controller.open(a.url)
+        try await Task.sleep(for: .milliseconds(100))
+        XCTAssertEqual(controller.editor.string, a.text)
+        XCTAssertTrue(controller.editor.isEditable)
+        controller.open(b.url)
+        controller.useFolder(other)
+        try await eventually { controller.editor.isEditable && controller.editor.string == c.text }
+        controller.close()
+    }
+
     @MainActor func testCleanReloadAndDirtyConflictThroughWindowController() async throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

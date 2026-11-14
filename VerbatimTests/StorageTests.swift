@@ -74,4 +74,21 @@ final class StorageTests: XCTestCase {
         wait(for: [done], timeout: 5)
         XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: folder.path), ["Final.txt"])
     }
+
+    func testConflictNoticeSurvivesAnImmediateLifecycleFlush() throws {
+        let first = try NoteStorage.create(text: "Title\nbaseline", in: folder)
+        let session = NoteSession(first)
+        try AtomicFile.write("Title\nexternal", to: first.url)
+        let done = expectation(description: "Conflict save")
+        session.save("Title\nmine") { result in
+            if case .success(let receipt) = result { XCTAssertNotNil(receipt.notice) }
+            else { XCTFail("Conflict save failed") }
+            done.fulfill()
+        }
+        let flushed = try session.flush("Title\nmine")
+        XCTAssertNotNil(flushed.notice)
+        XCTAssertEqual(try AtomicFile.read(first.url), "Title\nexternal")
+        XCTAssertEqual(try AtomicFile.read(flushed.snapshot.url), "Title\nmine")
+        wait(for: [done], timeout: 5)
+    }
 }

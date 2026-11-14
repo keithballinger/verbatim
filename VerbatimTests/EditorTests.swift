@@ -14,6 +14,14 @@ final class EditorTests: XCTestCase {
         editor.isAutomaticDataDetectionEnabled = true
         editor.isAutomaticTextCompletionEnabled = true
         editor.smartInsertDeleteEnabled = true
+        editor.inlinePredictionType = .yes
+        XCTAssertEqual(editor.inlinePredictionType, .no)
+        if #available(macOS 15.0, *) {
+            editor.mathExpressionCompletionType = .yes
+            editor.writingToolsBehavior = .complete
+            XCTAssertEqual(editor.mathExpressionCompletionType, .no)
+            XCTAssertEqual(editor.writingToolsBehavior, .none)
+        }
         XCTAssertFalse(editor.isRichText)
         XCTAssertFalse(editor.isAutomaticQuoteSubstitutionEnabled)
         XCTAssertFalse(editor.isAutomaticDashSubstitutionEnabled)

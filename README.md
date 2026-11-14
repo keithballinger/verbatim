@@ -43,7 +43,9 @@ Notes Folder…** to change it.
 Typing never invokes app-provided auto-capitalization, list continuation, or rich
 text formatting. Paste inserts the clipboard's plain string. Search uses the
 same guarded text view, so creating a title through search also avoids smart
-substitutions. macOS input methods, dictation, and explicitly invoked spelling
+substitutions. Inline predictions are also disabled, as are math completions and
+Writing Tools on macOS versions that provide them. macOS input methods,
+dictation, and explicitly invoked spelling
 replacements still supply text chosen by you or the input method.
 
 ## Plain files, safe saves
