@@ -1,0 +1,40 @@
+name: Verbatim
+options:
+  deploymentTarget:
+    macOS: '14.0'
+settings:
+  base:
+    SWIFT_VERSION: '5.9'
+    MACOSX_DEPLOYMENT_TARGET: '14.0'
+    CODE_SIGN_IDENTITY: '-'
+    CODE_SIGN_STYLE: Manual
+    ENABLE_HARDENED_RUNTIME: YES
+    COMBINE_HIDPI_IMAGES: YES
+targets:
+  Verbatim:
+    type: application
+    platform: macOS
+    sources: [Verbatim]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.verbatim.Verbatim
+        INFOPLIST_FILE: Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Resources/Verbatim.entitlements
+        LD_RUNPATH_SEARCH_PATHS: '$(inherited) @executable_path/../Frameworks'
+  VerbatimTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [VerbatimTests]
+    dependencies:
+      - target: Verbatim
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.verbatim.VerbatimTests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Verbatim:
+    build:
+      targets:
+        Verbatim: all
+    test:
+      targets: [VerbatimTests]
