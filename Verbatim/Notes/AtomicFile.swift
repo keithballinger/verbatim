@@ -35,7 +35,7 @@ enum AtomicFile {
         try handle.synchronize()
         try handle.close()
         let result = temporary.withUnsafeFileSystemRepresentation { source in
-            url.withUnsafeFileSystemRepresentation { destination in link(source!, destination!) }
+            url.withUnsafeFileSystemRepresentation { destination in renamex_np(source!, destination!, UInt32(RENAME_EXCL)) }
         }
         guard result == 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
     }

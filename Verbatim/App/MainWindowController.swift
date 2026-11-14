@@ -1,11 +1,12 @@
 import AppKit
 
-final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate, NSSearchFieldDelegate, NSTextViewDelegate {
+final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate, NSSearchFieldDelegate, NSTextViewDelegate, NSMenuItemValidation {
     let editor = VerbatimTextView()
     private let search = NSSearchField()
     private let table = NSTableView()
     private let status = NSTextField(labelWithString: "Choose a notes folder to begin.")
-    private let access = FolderAccess()
+    private let access: FolderAccess
+    private let defaults: UserDefaults
     private let worker = SearchWorker()
     private var notes: [NoteRecord] = []
     private var visible: [NoteRecord] = []
@@ -25,8 +26,19 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
     private var watcher: FolderWatcher?
     private var watchDebounce: DispatchWorkItem?
     private var trashInProgress = false
+    private var settings: SettingsWindowController?
+    private var initialCatalogLoaded = false
+    private let searchEditor: VerbatimTextView = {
+        let view = VerbatimTextView()
+        view.isFieldEditor = true
+        view.textContainerInset = .zero
+        view.font = .systemFont(ofSize: NSFont.systemFontSize)
+        return view
+    }()
 
-    init() {
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        access = FolderAccess(defaults: defaults)
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700),
                               styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         super.init(window: window)
@@ -64,6 +76,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         editorScroll.autohidesScrollers = true
         editorScroll.documentView = editor
         editor.delegate = self
+        editor.font = EditorPreferences.font(defaults: defaults)
+        editor.isContinuousSpellCheckingEnabled = defaults.bool(forKey: "spellChecking")
+        editor.isGrammarCheckingEnabled = defaults.bool(forKey: "grammarChecking")
         editor.isEditable = false
         editor.setAccessibilityLabel("Note text")
         let split = NSSplitView()
@@ -122,6 +137,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         notice = nil
         editor.string = ""
         original = ""
+        notes = []
+        initialCatalogLoaded = false
         editor.isEditable = false
         folder = url
         window?.representedURL = url
@@ -131,6 +148,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
             }
         } catch { show(error) }
         refresh()
+        if let last = defaults.string(forKey: "lastNoteFilename"),
+           defaults.string(forKey: "lastNoteFolder") == url.path,
+           !last.contains("/"), last != ".", last != "..", last.lowercased().hasSuffix(".txt") {
+            open(url.appendingPathComponent(last))
+        }
     }
 
     private func refresh() {
@@ -150,7 +172,12 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                     if let old = prior[record.url], old.modified == record.modified, old.size == record.size { record.title = old.title }
                     return record
                 }
+                self.initialCatalogLoaded = true
                 self.applyFilter()
+                if self.session == nil, self.loadTask == nil {
+                    if let first = records.first { self.open(first.url) }
+                    else { self.create(title: "") }
+                }
                 let changed = records.filter { record in
                     guard let old = prior[record.url] else { return true }
                     return old.modified != record.modified || old.size != record.size
@@ -228,6 +255,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                 let text = try await Task.detached(priority: .userInitiated) { try AtomicFile.read(url) }.value
                 guard let self, !Task.isCancelled else { return }
                 self.currentURL = url
+                self.loadTask = nil
                 self.original = text
                 self.session = NoteSession(NoteSnapshot(url: url, text: text))
                 self.appliedSaveSequence = 0
@@ -236,10 +264,15 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
                 self.editor.isEditable = true
                 self.editor.setSelectedRange(NSRange(location: 0, length: 0))
                 self.window?.title = "\(NoteNaming.title(from: text)) — Verbatim"
+                self.rememberSelection()
+                self.updateList(self.visible)
+                LaunchMeasurement.editorReady()
             } catch {
                 guard let self, !Task.isCancelled else { return }
                 self.editor.isEditable = self.session != nil
+                self.loadTask = nil
                 self.show(error)
+                if self.initialCatalogLoaded, self.session == nil, let first = self.notes.first, first.url != url { self.open(first.url) }
             }
         }
     }
@@ -255,6 +288,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
             session = NoteSession(snapshot)
             appliedSaveSequence = 0
             original = title
+            rememberSelection()
+            window?.title = "\(NoteNaming.title(from: title)) — Verbatim"
             editor.string = title
             editor.isEditable = true
             editor.undoManager?.removeAllActions()
@@ -262,6 +297,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
             search.stringValue = ""
             refresh()
             window?.makeFirstResponder(editor)
+            LaunchMeasurement.editorReady()
         } catch { show(error) }
     }
 
@@ -319,6 +355,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         let previousURL = currentURL
         currentURL = receipt.snapshot.url
         original = receipt.snapshot.text
+        rememberSelection()
         window?.isDocumentEdited = !editor.string.utf8.elementsEqual(original.utf8)
         window?.title = "\(NoteNaming.title(from: editor.string)) — Verbatim"
         if let message = receipt.notice { notice = message; status.stringValue = message }
@@ -384,6 +421,43 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         }
     }
 
+    func windowWillReturnFieldEditor(_ sender: NSWindow, to client: Any?) -> Any? {
+        (client as? NSSearchField) === search ? searchEditor : nil
+    }
+
+    private func rememberSelection() {
+        defaults.set(currentURL?.lastPathComponent, forKey: "lastNoteFilename")
+        defaults.set(folder?.path, forKey: "lastNoteFolder")
+    }
+
+    @objc func showSettings(_ sender: Any?) {
+        if settings == nil {
+            settings = SettingsWindowController(font: editor.font ?? EditorPreferences.font()) { [weak self] font in
+                self?.editor.font = font
+            }
+        }
+        settings?.showWindow(nil)
+    }
+
+    @objc func toggleSpelling(_ sender: Any?) {
+        editor.isContinuousSpellCheckingEnabled.toggle()
+        defaults.set(editor.isContinuousSpellCheckingEnabled, forKey: "spellChecking")
+    }
+
+    @objc func toggleGrammar(_ sender: Any?) {
+        editor.isGrammarCheckingEnabled.toggle()
+        defaults.set(editor.isGrammarCheckingEnabled, forKey: "grammarChecking")
+    }
+
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(toggleSpelling(_:)) {
+            menuItem.state = editor.isContinuousSpellCheckingEnabled ? .on : .off
+        } else if menuItem.action == #selector(toggleGrammar(_:)) {
+            menuItem.state = editor.isGrammarCheckingEnabled ? .on : .off
+        } else if menuItem.action == #selector(trashNote(_:)) { return currentURL != nil && !trashInProgress }
+        return !trashInProgress
+    }
+
     @objc func trashNote(_ sender: Any?) {
         guard !trashInProgress, flush(), let currentURL else { return }
         trashInProgress = true
@@ -403,6 +477,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, NSTableV
         }
     }
 
-    private func show(_ error: Error) { status.stringValue = error.localizedDescription }
+    private func show(_ error: Error) { notice = error.localizedDescription; status.stringValue = error.localizedDescription; status.toolTip = notice }
     func windowShouldClose(_ sender: NSWindow) -> Bool { flush() }
 }

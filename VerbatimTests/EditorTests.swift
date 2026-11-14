@@ -40,4 +40,24 @@ final class EditorTests: XCTestCase {
         for scalar in text.unicodeScalars { editor.insertText(String(scalar), replacementRange: editor.selectedRange()) }
         XCTAssertEqual(editor.string, text)
     }
+
+    @MainActor func testSystemToggleActionsCannotEnableSubstitutions() {
+        let editor = VerbatimTextView()
+        editor.toggleAutomaticQuoteSubstitution(nil)
+        editor.toggleAutomaticDashSubstitution(nil)
+        editor.toggleAutomaticTextReplacement(nil)
+        editor.toggleAutomaticSpellingCorrection(nil)
+        editor.toggleAutomaticLinkDetection(nil)
+        editor.toggleAutomaticDataDetection(nil)
+        editor.toggleAutomaticTextCompletion(nil)
+        editor.toggleSmartInsertDelete(nil)
+        XCTAssertFalse(editor.isAutomaticQuoteSubstitutionEnabled)
+        XCTAssertFalse(editor.isAutomaticDashSubstitutionEnabled)
+        XCTAssertFalse(editor.isAutomaticTextReplacementEnabled)
+        XCTAssertFalse(editor.isAutomaticSpellingCorrectionEnabled)
+        XCTAssertFalse(editor.isAutomaticLinkDetectionEnabled)
+        XCTAssertFalse(editor.isAutomaticDataDetectionEnabled)
+        XCTAssertFalse(editor.isAutomaticTextCompletionEnabled)
+        XCTAssertFalse(editor.smartInsertDeleteEnabled)
+    }
 }

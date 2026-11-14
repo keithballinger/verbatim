@@ -35,4 +35,19 @@ final class AtomicFileTests: XCTestCase {
         XCTAssertThrowsError(try AtomicFile.write("changed", to: link))
         XCTAssertEqual(try AtomicFile.read(target), "original")
     }
+
+    func testConcurrentReadersSeeOnlyCompleteAtomicWrites() async throws {
+        let url = folder.appendingPathComponent("atomic.txt")
+        let old = String(repeating: "a", count: 32_768)
+        let new = String(repeating: "👋", count: 8_192)
+        try AtomicFile.write(old, to: url)
+        let writer = Task.detached {
+            for n in 0..<100 { try AtomicFile.write(n.isMultiple(of: 2) ? new : old, to: url) }
+        }
+        for _ in 0..<200 {
+            let bytes = try Data(contentsOf: url)
+            XCTAssertTrue(bytes == Data(old.utf8) || bytes == Data(new.utf8))
+        }
+        try await writer.value
+    }
 }

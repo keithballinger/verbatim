@@ -16,13 +16,16 @@
 		477CC1282686E2125D3F2944 /* EditorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A7C39F9EDFBE1B905B97017 /* EditorTests.swift */; };
 		5A86657F2B1AA944FA07888F /* FolderWatcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC87C6BD8AB47066EA5DD71 /* FolderWatcherTests.swift */; };
 		6DEAB583C4D777B6F2F91C85 /* VerbatimTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4D308608D11E6F6252798C4 /* VerbatimTextView.swift */; };
+		79E8ED6DB5831921F668D9C5 /* LaunchMeasurement.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DBD747E55916F7F2AE0EAA /* LaunchMeasurement.swift */; };
 		838AE368371AC27A8BD63889 /* FolderWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F69E2308B532E72B61D467 /* FolderWatcher.swift */; };
 		B3CFBE906674C0E66DCEA37E /* NoteStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 019855A6819B2D359B101095 /* NoteStorage.swift */; };
 		B417A97140FAAF47BE1BB415 /* NoteCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7E1C74222B1AE7FCBCE61D /* NoteCatalog.swift */; };
+		BB25D88880C10D283CB4D58E /* ScaleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 409BE11D3B2B32A5A780CAE4 /* ScaleTests.swift */; };
 		BEF0A1B5268D47890BC03E2C /* AtomicFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F1B081E8D75C9E1B61183B /* AtomicFile.swift */; };
 		D8C4903837FC8BA564B73DCB /* NoteNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 431740044D726ABDD594686B /* NoteNaming.swift */; };
 		E6AB5CF8982B07ECA9CF4806 /* StorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9AF330CA1B20EE4FEED315A /* StorageTests.swift */; };
 		F7132CC0242007B454B585F1 /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EFDA24030679A8E8F46F35E /* MainWindowController.swift */; };
+		FB89D24E5C8753FABC73EAEA /* EditorPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD9DDFC9BC368E85B78E479A /* EditorPreferences.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +45,7 @@
 		24FC024907B1B2EB732687CE /* Verbatim.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Verbatim.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2A7C39F9EDFBE1B905B97017 /* EditorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorTests.swift; sourceTree = "<group>"; };
 		3E4175124CA520C0D5F14666 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		409BE11D3B2B32A5A780CAE4 /* ScaleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScaleTests.swift; sourceTree = "<group>"; };
 		431740044D726ABDD594686B /* NoteNaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteNaming.swift; sourceTree = "<group>"; };
 		6F7E1C74222B1AE7FCBCE61D /* NoteCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteCatalog.swift; sourceTree = "<group>"; };
 		78F1B081E8D75C9E1B61183B /* AtomicFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtomicFile.swift; sourceTree = "<group>"; };
@@ -51,7 +55,9 @@
 		9427498CDD65F26D99510FB6 /* VerbatimTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VerbatimTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B152404C75790AAEE33796AB /* FolderAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderAccess.swift; sourceTree = "<group>"; };
 		D9AF330CA1B20EE4FEED315A /* StorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageTests.swift; sourceTree = "<group>"; };
+		DD9DDFC9BC368E85B78E479A /* EditorPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorPreferences.swift; sourceTree = "<group>"; };
 		E4D308608D11E6F6252798C4 /* VerbatimTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerbatimTextView.swift; sourceTree = "<group>"; };
+		F0DBD747E55916F7F2AE0EAA /* LaunchMeasurement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchMeasurement.swift; sourceTree = "<group>"; };
 		F489E20BA2F3539D55869E22 /* NamingAndSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamingAndSearchTests.swift; sourceTree = "<group>"; };
 		F92683A62F448B71FB9AEAA8 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -83,6 +89,7 @@
 				9082A78B335742CDFFD3C839 /* ExternalEditTests.swift */,
 				0BC87C6BD8AB47066EA5DD71 /* FolderWatcherTests.swift */,
 				F489E20BA2F3539D55869E22 /* NamingAndSearchTests.swift */,
+				409BE11D3B2B32A5A780CAE4 /* ScaleTests.swift */,
 				D9AF330CA1B20EE4FEED315A /* StorageTests.swift */,
 			);
 			path = VerbatimTests;
@@ -92,6 +99,8 @@
 			isa = PBXGroup;
 			children = (
 				3E4175124CA520C0D5F14666 /* AppDelegate.swift */,
+				DD9DDFC9BC368E85B78E479A /* EditorPreferences.swift */,
+				F0DBD747E55916F7F2AE0EAA /* LaunchMeasurement.swift */,
 				F92683A62F448B71FB9AEAA8 /* main.swift */,
 				8EFDA24030679A8E8F46F35E /* MainWindowController.swift */,
 			);
@@ -211,8 +220,10 @@
 			files = (
 				24CB3C984E3A9BA2F057801E /* AppDelegate.swift in Sources */,
 				BEF0A1B5268D47890BC03E2C /* AtomicFile.swift in Sources */,
+				FB89D24E5C8753FABC73EAEA /* EditorPreferences.swift in Sources */,
 				402DE342FCFFCD524DC6E980 /* FolderAccess.swift in Sources */,
 				838AE368371AC27A8BD63889 /* FolderWatcher.swift in Sources */,
+				79E8ED6DB5831921F668D9C5 /* LaunchMeasurement.swift in Sources */,
 				F7132CC0242007B454B585F1 /* MainWindowController.swift in Sources */,
 				B417A97140FAAF47BE1BB415 /* NoteCatalog.swift in Sources */,
 				D8C4903837FC8BA564B73DCB /* NoteNaming.swift in Sources */,
@@ -231,6 +242,7 @@
 				345AD0E1702A62E03E4D1FD1 /* ExternalEditTests.swift in Sources */,
 				5A86657F2B1AA944FA07888F /* FolderWatcherTests.swift in Sources */,
 				3CC461E08F45D5EBDBA23DB7 /* NamingAndSearchTests.swift in Sources */,
+				BB25D88880C10D283CB4D58E /* ScaleTests.swift in Sources */,
 				E6AB5CF8982B07ECA9CF4806 /* StorageTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

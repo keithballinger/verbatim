@@ -8,7 +8,10 @@ final class ExternalEditTests: XCTestCase {
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: folder) }
         let first = try NoteStorage.create(text: "Title\nbaseline", in: folder)
-        let controller = MainWindowController()
+        let suite = "VerbatimTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let controller = MainWindowController(defaults: defaults)
         controller.useFolder(folder)
         controller.open(first.url)
         try await eventually { controller.editor.isEditable }

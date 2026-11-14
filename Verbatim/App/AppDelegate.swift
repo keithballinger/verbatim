@@ -18,6 +18,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let appMenu = NSMenu()
         appMenu.addItem(withTitle: "About Verbatim", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
+        appMenu.addItem(withTitle: "Settings…", action: #selector(MainWindowController.showSettings(_:)), keyEquivalent: ",").target = mainWindow
+        appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Hide Verbatim", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(withTitle: "Quit Verbatim", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         let file = NSMenu()
@@ -38,6 +40,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         edit.addItem(withTitle: "Search Notes", action: #selector(MainWindowController.focusSearch(_:)), keyEquivalent: "l").target = mainWindow
         let find = edit.addItem(withTitle: "Find in Note…", action: #selector(NSTextView.performFindPanelAction(_:)), keyEquivalent: "f")
         find.tag = NSTextFinder.Action.showFindInterface.rawValue
+        edit.addItem(.separator())
+        edit.addItem(withTitle: "Check Spelling While Typing", action: #selector(MainWindowController.toggleSpelling(_:)), keyEquivalent: "").target = mainWindow
+        edit.addItem(withTitle: "Check Grammar With Spelling", action: #selector(MainWindowController.toggleGrammar(_:)), keyEquivalent: "").target = mainWindow
         for (title, menu) in [("Verbatim", appMenu), ("File", file), ("Edit", edit)] {
             main.addItem(withTitle: title, action: nil, keyEquivalent: "").submenu = menu
         }

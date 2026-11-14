@@ -69,6 +69,8 @@ final class VerbatimTextView: NSTextView {
         usesFindBar = true
         isIncrementalSearchingEnabled = true
         font = .monospacedSystemFont(ofSize: 14, weight: .regular)
+        textColor = .textColor
+        backgroundColor = .textBackgroundColor
         textContainerInset = NSSize(width: 20, height: 20)
         isVerticallyResizable = true
         isHorizontallyResizable = false
