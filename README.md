@@ -2,6 +2,11 @@
 
 A minimal native macOS notes app that leaves your text alone. macOS 14 or later.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/main-dark.png">
+  <img src="docs/screenshots/main-light.png" width="840" alt="Verbatim's window: a sidebar listing notes by title and last-modified date beside a plain-text editor showing a note of shell commands with straight quotes and double hyphens left as typed">
+</picture>
+
 Verbatim uses an AppKit `NSTextView` with rich text, smart punctuation, replacement,
 correction, completion, link/data detection, and smart insertion disabled. Its
 subclass refuses attempts to enable these settings; its menus expose no
@@ -45,6 +50,11 @@ Notes Folder…** to change it.
 - **Cmd+S:** save immediately. **Cmd+Delete:** move the current note to Trash.
 - **Cmd+,**: choose the editor font and size. Spelling and grammar checking are
   optional Edit menu toggles, both off by default.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/search-dark.png">
+  <img src="docs/screenshots/search-light.png" width="840" alt="Searching for &quot;list&quot;: the sidebar shows 4 of 8 notes, including one that matches only in its body, which is open in the editor">
+</picture>
 
 Typing never invokes app-provided auto-capitalization, list continuation, or rich
 text formatting. Paste inserts the clipboard's plain string. Search uses the
