@@ -45,6 +45,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: verbatim
+        PRODUCT_MODULE_NAME: VerbatimCLI
         PRODUCT_BUNDLE_IDENTIFIER: org.verbatim.cli
         CODE_SIGN_ENTITLEMENTS: Resources/CLI.entitlements
         OTHER_LDFLAGS: '$(inherited) -sectcreate __TEXT __info_plist "$(SRCROOT)/Resources/CLI-Info.plist"'

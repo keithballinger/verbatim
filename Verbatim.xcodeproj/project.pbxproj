@@ -401,6 +401,7 @@
 				);
 				OTHER_LDFLAGS = "$(inherited) -sectcreate __TEXT __info_plist \"$(SRCROOT)/Resources/CLI-Info.plist\"";
 				PRODUCT_BUNDLE_IDENTIFIER = org.verbatim.cli;
+				PRODUCT_MODULE_NAME = VerbatimCLI;
 				PRODUCT_NAME = verbatim;
 				SDKROOT = macosx;
 			};
@@ -521,6 +522,7 @@
 				);
 				OTHER_LDFLAGS = "$(inherited) -sectcreate __TEXT __info_plist \"$(SRCROOT)/Resources/CLI-Info.plist\"";
 				PRODUCT_BUNDLE_IDENTIFIER = org.verbatim.cli;
+				PRODUCT_MODULE_NAME = VerbatimCLI;
 				PRODUCT_NAME = verbatim;
 				SDKROOT = macosx;
 			};
