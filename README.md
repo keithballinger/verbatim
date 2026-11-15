@@ -18,6 +18,7 @@ make build   # universal release app: .build/Build/Products/Release/Verbatim.app
 make run
 make test
 make install # copy the app to /Applications (override with APPDIR=...)
+make release # Developer ID signed, notarized zip in .build/dist (see scripts/release.sh)
 ```
 
 The checked-in Xcode project builds without a project generator. `project.yml` is
@@ -100,7 +101,7 @@ and external-edit reconciliation through the window controller. A generated
 files live in temporary directories.
 
 The universal build includes arm64 and x86_64. Signing is local/ad hoc by default;
-public distribution needs your own Developer ID signing and notarization.
+`make release` signs with your Developer ID certificate and notarizes the result.
 Cold launch below 300ms, Intel runtime behavior, macOS 14 runtime behavior, and
 real third-party sync services require separate verification.
 
