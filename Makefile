@@ -1,12 +1,14 @@
 PREFIX ?= $(HOME)/.local
 APPDIR ?= /Applications
-.PHONY: build run test install install-cli
+.PHONY: build run test install install-cli release
 build:
 	./scripts/build.sh
 run: build
 	open .build/Build/Products/Release/Verbatim.app
 test:
 	./scripts/test.sh
+release:
+	./scripts/release.sh
 install: build
 	mkdir -p "$(APPDIR)"
 	rm -rf "$(APPDIR)/Verbatim.app"
